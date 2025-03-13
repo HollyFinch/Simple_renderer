@@ -71,8 +71,10 @@ float intersectRay(Ray r, Spherro spherro) {
 
 int main() {
 
-    int image_W = 100;
-    int image_H = 100;
+    int image_W = 1000;
+    int image_H = 1000;
+
+    //float aspect = (float)image_W/ (float)image_H;
 
     uint64_t holly = 0;
 
@@ -82,14 +84,57 @@ int main() {
         return 1;
     }
 
-    fprintf(file, "P3\n%d %d\n255\n", image_W, image_H);
-    for (int i = 0; i < image_W; i++) {
-        for (int j = 0; j < image_H; j++) {
-            int red = 255 - (255 * i / image_W);
-            int green = (255 * i / image_W);
-            fprintf(file, "%d %d 0\n", red, green); 
-        }
-    }
+   fprintf(file, "P3\n%d %d\n255\n", image_W, image_H);
+
+
+    Spherro spherro = {vec3(0.0f, 0.0f, -1.0f), 0.5f};
+
+    // camera
+
+    Vec3 lower_left = vec3(-2.0f, -2.0f, -1.0f);
+    Vec3 horizontal = vec3(4.0f, 0.0f, 0.0f);
+    Vec3 vertical = vec3(0.0f, 4.0f, 0.0f);
+    Vec3 origin = vec3(0.0f, 0.0f, 0.0f);
+
+    for (int j = 0; j < image_H; j++) {
+        for (int i = 0; i < image_W; i++) {
+            
+            float u = (float)i / (float)(image_W);
+            float v = (float)j / (float)(image_H);
+
+            Ray shame_about_Ray;
+            shame_about_Ray.origin = origin;
+            shame_about_Ray.direction = sub(add(lower_left, add(mul(horizontal,u), mul(vertical,v))), origin); 
+            shame_about_Ray.direction = normalise(shame_about_Ray.direction);
+
+            float t_boop = intersectRay(shame_about_Ray, spherro);
+            if (t_boop > 0.0f) {
+                Vec3 boop_location = pointAtParameter(shame_about_Ray, t_boop);
+                Vec3 normal = sub(boop_location, spherro.center);
+                normal = normalise(normal);
+                float red = 0.5f * (normal.x + 1.0f) ;
+                float green = 0.5f * (normal.y + 1.0f);
+                float blue = 0.5f * (normal.z + 1.0f);
+
+                int ir = (int)(255.99f * red);
+                int ig = (int)(255.99f * green);  
+                int ib = (int)(255.99f * blue); 
+
+                fprintf(file, "%d %d %d\n", ir, ig, ib);
+            } 
+            else {
+                Vec3 unit_dir = normalise(shame_about_Ray.direction);
+                float t = 0.5f * (unit_dir.y + 1.0f);
+                Vec3 c = add(mul(vec3(1.0f,1.0f,1.0f), (1.0f - t)), mul(vec3(0.5f, 0.7f,1.0f), t));
+                int ir = (int)(255.99f * c.x);
+                int ig = (int)(255.99f * c.y);
+                int ib = (int)(255.99f * c.z);
+
+                fprintf(file, "%d %d %d\n", ir, ig, ib);
+            }
+
+        }}
+
 
     fclose(file);
     return 0;
